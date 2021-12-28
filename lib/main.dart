@@ -5,6 +5,7 @@ import 'package:vibration/vibration.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 String latitudedata = "";
 String longitudedata = "";
@@ -205,10 +206,9 @@ class _SecondRoute extends State<SecondRoute> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => SpecificMapRoute(
-                        username: responseData[i]['username'],
-                        latitude: responseData[i]['latitude'],
-                        longitude: responseData[i]['longitude'])),
+                    builder: (context) => MapSample(
+                        latitudedata: responseData[i]['latitude'],
+                        longitudedata: responseData[i]['longitude'])),
               );
             },
             child: const Text("Map"))
@@ -218,56 +218,68 @@ class _SecondRoute extends State<SecondRoute> {
   }
 }
 
-class SpecificMapRoute extends StatefulWidget {
-  const SpecificMapRoute(
-      {Key? key,
-      required this.username,
-      required this.latitude,
-      required this.longitude})
+class MapSample extends StatefulWidget {
+  MapSample({Key? key, required this.latitudedata, required this.longitudedata})
       : super(key: key);
+  String latitudedata;
+  String longitudedata;
 
-  final String username;
-  final String latitude;
-  final String longitude;
   @override
-  _SpecificMapRoute createState() => _SpecificMapRoute(
-      username: username, latitude: latitude, longitude: longitude);
+  State<MapSample> createState() =>
+      MapSampleState(latitudedata: latitudedata, longitudedata: longitudedata);
 }
 
-class _SpecificMapRoute extends State<SpecificMapRoute> {
-  _SpecificMapRoute(
-      {required this.username,
-      required this.latitude,
-      required this.longitude});
+class MapSampleState extends State<MapSample> {
+  MapSampleState({required this.latitudedata, required this.longitudedata});
+  Completer<GoogleMapController> _controller = Completer();
 
-  String username;
-  String latitude;
-  String longitude;
-  @override
-  void initState() {
-    super.initState();
+  String latitudedata;
+  String longitudedata;
+
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  changeusertarget() {
+    CameraPosition user = CameraPosition(
+        bearing: 192.8334901395799,
+        target: LatLng(double.parse(latitudedata), double.parse(longitudedata)),
+        tilt: 59.440717697143555,
+        zoom: 19.151926040649414);
+
+    return user;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("// User is here //"),
-        centerTitle: true,
+    return new Scaffold(
+      body: GoogleMap(
+        mapType: MapType.hybrid,
+        initialCameraPosition: _kGooglePlex,
+        zoomControlsEnabled: false,
+        onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+        },
+        markers: {
+          Marker(
+              markerId: MarkerId("user"),
+              position: LatLng(
+                  double.parse(latitudedata), double.parse(longitudedata)),
+              infoWindow: InfoWindow(title: "User"))
+        },
       ),
-      body: Center(
-        child: Column(
-          children: [
-            Text("User: " +
-                username +
-                " is here" +
-                "\n" +
-                latitude +
-                "\n" +
-                longitude),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _goToTheLake,
+        label: Text('SEE POSITION'),
+        icon: Icon(Icons.location_pin),
       ),
     );
+  }
+
+  Future<void> _goToTheLake() async {
+    final GoogleMapController controller = await _controller.future;
+    controller
+        .animateCamera(CameraUpdate.newCameraPosition(changeusertarget()));
   }
 }
