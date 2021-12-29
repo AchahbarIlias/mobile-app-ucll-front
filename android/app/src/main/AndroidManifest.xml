@@ -45,4 +45,12 @@
      <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
      <!-- Required to fetch data from the internet. -->
      <uses-permission android:name="android.permission.INTERNET" />
+     <!-- Required to access the sensors. -->
+     <uses-permission android:name="android.permission.BODY_SENSORS" />
+     <!-- Required to access the temperature sensor. -->
+     <uses-permission android:name="android.permission.SENSORS" />
+     <!-- Required to access the pressure sensor. -->
+     <uses-permission android:name="android.permission.USE_SENSORS" />
+
+
 </manifest>
